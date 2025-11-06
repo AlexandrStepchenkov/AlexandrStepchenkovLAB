@@ -1,38 +1,34 @@
 package com.example.carsharing.controller;
 
 import com.example.carsharing.model.Car;
+import com.example.carsharing.service.DB;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/cars")
+@RequiredArgsConstructor
 public class CarController {
+    private final DB db;
 
-    private final List<Car> cars = new ArrayList<>();
-    private long counter = 1;
-
-    @PostMapping
-    public Car addCar(@RequestBody Car car) {
-        car.setId(counter++);
-        cars.add(car);
-        return car;
+    @PostMapping("/add")
+    public Car add(@RequestParam int carId,
+                   @RequestParam String model,
+                   @RequestParam String licensePlate,
+                   @RequestParam double pricePerKm) {
+        return db.saveCar(carId, model, licensePlate, pricePerKm);
     }
 
     @GetMapping
-    public List<Car> getAllCars() {
-        return cars;
+    public List<Car> all() {
+        return db.cars();
     }
 
-    @PutMapping("/{id}/availability")
-    public Car updateAvailability(@PathVariable Long id, @RequestParam boolean available) {
-        return cars.stream()
-                .filter(c -> Objects.equals(c.getId(), id))
-                .findFirst()
-                .map(c -> {
-                    c.setAvailable(available);
-                    return c;
-                })
-                .orElse(null);
+    @DeleteMapping("/delete")
+    public String delete(@RequestParam int carId) {
+        db.deleteCar(carId);
+        return "car disabled";
     }
 }

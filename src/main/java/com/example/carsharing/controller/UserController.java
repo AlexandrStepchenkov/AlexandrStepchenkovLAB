@@ -1,26 +1,34 @@
 package com.example.carsharing.controller;
 
 import com.example.carsharing.model.User;
+import com.example.carsharing.service.DB;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
+    private final DB db;
 
-    private final List<User> users = new ArrayList<>();
-    private long counter = 1;
-
-    @PostMapping
-    public User addUser(@RequestBody User user) {
-        user.setId(counter++);
-        users.add(user);
-        return user;
+    @PostMapping("/add")
+    public User add(@RequestParam int userId,
+                    @RequestParam String name,
+                    @RequestParam String email,
+                    @RequestParam String phone) {
+        return db.saveUser(userId, name, email, phone);
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return users;
+    public List<User> all() {
+        return db.users();
+    }
+
+    @DeleteMapping("/delete")
+    public String delete(@RequestParam int userId) {
+        db.deleteUser(userId);
+        return "deleted";
     }
 }

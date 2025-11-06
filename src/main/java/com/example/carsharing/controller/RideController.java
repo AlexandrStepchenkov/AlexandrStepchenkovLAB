@@ -1,61 +1,52 @@
 package com.example.carsharing.controller;
 
 import com.example.carsharing.model.*;
-import com.example.carsharing.service.PaymentService;
+import com.example.carsharing.service.DB;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/rides")
+@RequiredArgsConstructor
 public class RideController {
+    private final DB db;
 
-    private final List<Ride> rides = new ArrayList<>();
-    private final List<Payment> payments = new ArrayList<>();
-    private final PaymentService paymentService;
-    private long counter = 1;
-
-    public RideController(PaymentService paymentService) {
-        this.paymentService = paymentService;
+    @PostMapping("/add")
+    public Object add(@RequestParam int userId, @RequestParam int carId,
+                      @RequestParam double dist, @RequestParam double hours) {
+        Ride r = db.addRide(userId, carId, dist, hours);
+        return r != null ? r : "car not available";
     }
 
-    @PostMapping
-    public Ride createRide(@RequestBody Ride ride) {
-        ride.setId(counter++);
-        ride.setStatus("CREATED");
-        rides.add(ride);
-        return ride;
+    @PutMapping("/start")
+    public Object start(@RequestParam Long rideId) {
+        Ride r = db.startRide(rideId);
+        return r != null ? r : "cannot start";
     }
 
-    @PutMapping("/{id}/start")
-    public Ride startRide(@PathVariable Long id) {
-        return updateStatus(id, "IN_PROGRESS");
-    }
-
-    @PutMapping("/{id}/complete")
-    public Payment completeRide(@PathVariable Long id) {
-        Ride ride = updateStatus(id, "COMPLETED");
-        if (ride != null) {
-            Payment payment = paymentService.calculatePayment(ride);
-            payments.add(payment);
-            return payment;
-        }
-        return null;
-    }
-
-    private Ride updateStatus(Long id, String newStatus) {
-        return rides.stream()
-                .filter(r -> Objects.equals(r.getId(), id))
-                .findFirst()
-                .map(r -> {
-                    r.setStatus(newStatus);
-                    return r;
-                })
-                .orElse(null);
+    @PutMapping("/complete")
+    public Object complete(@RequestParam Long rideId) {
+        Payment p = db.completeRide(rideId);
+        return p != null ? p : "cannot complete";
     }
 
     @GetMapping
-    public List<Ride> getAllRides() {
-        return rides;
-    }
+    public List<Ride> all() { return db.rides(); }
+
+    @GetMapping("/available-cars")
+    public List<Car> availableCars() { return db.availableCars(); }
+
+    @GetMapping("/by-user")
+    public List<Ride> byUser(@RequestParam int userId) { return db.ridesByUser(userId); }
+
+    @GetMapping("/revenue")
+    public double revenue() { return db.totalRevenue(); }
+
+    @GetMapping("/active-count")
+    public int activeCount() { return db.activeRidesCount(); }
+
+    @GetMapping("/busy-cars")
+    public List<Car> busyCars() { return db.busyCars(); }
 }
