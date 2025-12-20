@@ -9,5 +9,5 @@ public class Ride {
     private User user;
     private double distanceKm;
     private double durationHours;
-    private String status; // CREATED, IN_PROGRESS, COMPLETED
+    private String status;
 }

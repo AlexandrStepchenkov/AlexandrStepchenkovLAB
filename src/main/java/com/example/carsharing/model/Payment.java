@@ -7,4 +7,5 @@ public class Payment {
     private Long id;
     private Ride ride;
     private double amount;
+    private String status = "PENDING"; // PENDING, COMPLETED, FAILED
 }
